@@ -30,7 +30,8 @@ class BananaDistribution:
         Returns:
             float: 对数概率密度值
         """
-        x, y = theta
+        x = theta[..., 0]
+        y = theta[..., 1]
         # 这是非线性变换的反变换
         y_prime = y - self.b * (x**2 - self.a**2)
         x_prime = x / self.a
