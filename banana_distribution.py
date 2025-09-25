@@ -20,27 +20,24 @@ class BananaDistribution:
         self.norm = multivariate_normal(mean=mean, cov=cov)
 
     def log_prob(self, theta):
-        """
-        计算给定点 theta = [x, y] 的对数概率密度
-        这是未归一化的，但对于MCMC算法已经足够
-        
-        Args:
-            theta (np.ndarray): 一个二维点 [x, y]
-            
-        Returns:
-            float: 对数概率密度值
-        """
+        # 记录原始形状，以便最后恢复
+        original_shape = theta.shape[:-1]
+
         x = theta[..., 0]
         y = theta[..., 1]
-        # 这是非线性变换的反变换
+        
         y_prime = y - self.b * (x**2 - self.a**2)
         x_prime = x / self.a
         
-        # 变换后的坐标
-        theta_prime = np.array([x_prime, y_prime])
+        theta_prime = np.stack([x_prime, y_prime], axis=-1)
         
-        # 计算原始高斯分布的对数概率
-        return self.norm.logpdf(theta_prime)
+        num_points = np.prod(original_shape) if original_shape else 1
+        theta_prime_reshaped = theta_prime.reshape((num_points, 2))
+        
+        log_pdf_flat = self.norm.logpdf(theta_prime_reshaped)
+        
+        # 将结果重塑回原始形状
+        return log_pdf_flat.reshape(original_shape)
 
     def grad_log_prob(self, theta):
         """
